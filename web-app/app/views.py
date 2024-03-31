@@ -45,7 +45,7 @@ def index():
     movies = sparql.query().convert()
 
     for i, movie in enumerate(movies['results']['bindings']):
-        # movies['results']['bindings'][i]['img'] = get_image(movie['movie']['value'])
+        movies['results']['bindings'][i]['img'] = get_image(movie['movie']['value'])
         movies['results']['bindings'][i]['movie']['value'] = movie['movie']['value'].split('#')[1]
         if len(movie['abstract']["value"]) >= 500:
             movies['results']['bindings'][i]['abstract']["value"] = movie['abstract']["value"][:500] + "..."
