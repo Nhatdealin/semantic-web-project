@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="form-popup white_content" id="myForm">
-    <form class="form-container">
+    <form class="form-container" id="edit-form">
       <h1>Edit Information Film</h1>
 
       <label for="Title"><b>Title</b></label>
-      <input type="text" placeholder="Enter New Title" name="title" required>
+      <input type="text" id="title" placeholder="Enter New Title" required>
 
       <label for="abstract"><b>Abstract</b></label>
-      <textarea placeholder="Enter New Abstract" name="abs" required></textarea>
+      <textarea id="abstract" placeholder="Enter New Abstract" required></textarea>
 
-      <button type="submit" class="btn">Submit</button>
+      <button type="submit" class="btn" onclick="submitForm()">Submit</button>
       <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
     </form>
 </div>
@@ -25,6 +25,7 @@
             <button class="editbtn" id="editfilm" onclick="openForm()">Edit information</button>
              <!-- <button class="deletebtn">Delete</button> -->
         </div>
+        <div id="output"></div>
     </div>
 
     <table class="table table-striped" >

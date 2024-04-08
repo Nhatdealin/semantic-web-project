@@ -1,5 +1,6 @@
 from app import app
-from flask import render_template
+from flask import render_template, redirect
+from flask import request as flask_request
 from SPARQLWrapper import SPARQLWrapper, JSON
 from bs4 import BeautifulSoup
 from urllib import request
@@ -28,6 +29,7 @@ PREFIX = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " \
          "PREFIX dct: <http://purl.org/dc/terms/>"
 
 sparql = SPARQLWrapper("http://localhost:3030/wolff2/query")
+sparql_update = SPARQLWrapper("http://localhost:3030/wolff2/update")
 # sparql = SPARQLWrapper("http://localhost:3030/test5/query")
 
 
@@ -54,6 +56,7 @@ def index():
 
 @app.route('/film/<uri>')
 def get_film(uri='none'):
+    org_uri = uri
     uri = MOVIE + uri.replace(" ", "_")
     sparql.setQuery( PREFIX +
                      "SELECT ?predicate ?o WHERE { " +
@@ -116,7 +119,26 @@ def get_film(uri='none'):
 
     img_url = get_image(uri)
 
-    return render_template('film.html', img=img_url, list=movieData)
+    return render_template('film.html', img=img_url, list=movieData, uri=org_uri)
+
+@app.route('/film/<org_uri>/edit', methods=['POST'])
+def set_film(org_uri='none'):
+    title = flask_request.form['title']
+    abstract = flask_request.form['abstract']
+    uri = MOVIE + org_uri.replace(" ", "_")
+    query_string = PREFIX + """DELETE {{?s wolff:title ?o ; wolff:abstract ?o}}
+                INSERT {{?s wolff:title "{}" ;
+                        wolff:abstract "{}" .
+                    }}
+                WHERE  {{ ?s ?p ?o .
+                        FILTER (?s = <{}>)
+                }}""".format(title, abstract, uri)
+    sparql_update.setQuery(query_string)
+    sparql_update.method = 'POST'
+    sparql_update.setReturnFormat(JSON)
+    qResults = sparql_update.query().convert()
+
+    return redirect("/film/{}".format(org_uri))
 
 
 @app.route('/person/<string:name>')

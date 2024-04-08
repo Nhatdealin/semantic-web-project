@@ -35,3 +35,16 @@ function closeForm() {
     document.getElementById("myForm").style.display = "none";
     document.getElementById('backgrInfo').style.display='none'
 }
+
+function submitForm() {
+    $.ajax({
+      data : {
+        title : $('#title').val(),
+        abstract : $('#abstract').val(),
+      },
+      type : 'POST',
+      url : window.location.pathname + '/edit',
+      success: function(){
+        alert("Edited film information");}
+    })
+}
