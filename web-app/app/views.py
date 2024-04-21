@@ -41,7 +41,7 @@ def index():
         ?movie a wolff:Movie .
         ?movie wolff:title ?title .
         ?movie wolff:abstract ?abstract .
-    } LIMIT 100
+    } LIMIT 20
     """)
     sparql.setReturnFormat(JSON)
     movies = sparql.query().convert()
@@ -53,6 +53,29 @@ def index():
             movies['results']['bindings'][i]['abstract']["value"] = movie['abstract']["value"][:500] + "..."
     return render_template('index.html', title='Home', list=movies['results']['bindings'])
 
+@app.route('/search')
+def search():
+    search_str = flask_request.args.get('search_str')
+    if search_str == "":
+        return redirect("/index.html")
+    else:
+        sparql.setQuery(PREFIX + """
+        SELECT ?movie ?title ?abstract WHERE {{
+            ?movie a wolff:Movie .
+            ?movie wolff:title ?title .
+            ?movie wolff:abstract ?abstract .
+            FILTER ( REGEX ( LCASE(?title), LCASE('{}') ) ) .
+        }} LIMIT 20
+        """.format(search_str))
+        sparql.setReturnFormat(JSON)
+        movies = sparql.query().convert()
+
+        for i, movie in enumerate(movies['results']['bindings']):
+            movies['results']['bindings'][i]['img'] = get_image(movie['movie']['value'])
+            movies['results']['bindings'][i]['movie']['value'] = movie['movie']['value'].split('#')[1]
+            if len(movie['abstract']["value"]) >= 500:
+                movies['results']['bindings'][i]['abstract']["value"] = movie['abstract']["value"][:500] + "..."
+        return render_template('index.html', title='Home', list=movies['results']['bindings'])
 
 @app.route('/film/<uri>')
 def get_film(uri='none'):

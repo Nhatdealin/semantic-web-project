@@ -128,3 +128,33 @@ button {
     z-index: 1002;
     overflow: auto;
   }
+
+  .navbar .search-container .search-form button {
+  float: right;
+  padding: 6px 10px;
+  margin-top: 8px;
+  margin-right: 16px;
+  background: #ddd;
+  font-size: 17px;
+  border: none;
+  cursor: pointer;
+  width: 5%;
+}
+
+.navbar .search-container .search-form{
+  display: flex;
+  flex-direction: row;
+  justify-content: right;
+}
+
+.navbar .search-form input[type=text] {
+  padding: 6px;
+  margin-top: 8px;
+  margin-block: auto;
+  font-size: 17px;
+  border: none;
+}
+
+.navbar .search-container .search-form  button:hover {
+  background: #ccc;
+}
