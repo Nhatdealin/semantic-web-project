@@ -4,6 +4,7 @@ from flask import request as flask_request
 from SPARQLWrapper import SPARQLWrapper, JSON
 from bs4 import BeautifulSoup
 from urllib import request
+from .img_url_data import IMG_URLS
 import ssl
 
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -41,7 +42,7 @@ def index():
         ?movie a wolff:Movie .
         ?movie wolff:title ?title .
         ?movie wolff:abstract ?abstract .
-    } LIMIT 20
+    } LIMIT 100
     """)
     sparql.setReturnFormat(JSON)
     movies = sparql.query().convert()
@@ -65,17 +66,31 @@ def search():
             ?movie wolff:title ?title .
             ?movie wolff:abstract ?abstract .
             FILTER ( REGEX ( LCASE(?title), LCASE('{}') ) ) .
-        }} LIMIT 20
+        }} LIMIT 100
         """.format(search_str))
         sparql.setReturnFormat(JSON)
         movies = sparql.query().convert()
+
+        sparql.setQuery(PREFIX + """
+                SELECT * WHERE {{ ?person a wolff:Person .
+                        ?person wolff:name ?name .
+                        ?person wolff:nationality ?nationality .
+                        FILTER ( REGEX ( LCASE(?name), LCASE('{}') ) ) .
+        }}
+        """.format(search_str))
+        sparql.setReturnFormat(JSON)
+        persons = sparql.query().convert()
 
         for i, movie in enumerate(movies['results']['bindings']):
             movies['results']['bindings'][i]['img'] = get_image(movie['movie']['value'])
             movies['results']['bindings'][i]['movie']['value'] = movie['movie']['value'].split('#')[1]
             if len(movie['abstract']["value"]) >= 500:
                 movies['results']['bindings'][i]['abstract']["value"] = movie['abstract']["value"][:500] + "..."
-        return render_template('index.html', title='Home', list=movies['results']['bindings'])
+
+        for i, person in enumerate(persons['results']['bindings']):
+            persons['results']['bindings'][i]['img'] = get_image(person['person']['value'].replace(" ", "_"))
+            persons['results']['bindings'][i]['person']['value'] = person['person']['value'].split('#')[1]
+        return render_template('search.html', title='Search results for: '+ search_str, list_movies=movies['results']['bindings'], list_person=persons['results']['bindings'])
 
 @app.route('/film/<uri>')
 def get_film(uri='none'):
@@ -212,8 +227,14 @@ def get_person(name):
                 personData['movie'][movie][i] = roles[role]
 
     url_img = get_image(uri)
-    collaboration = get_collaboration(uri)
-    oscar_winners = get_oscar_winners(uri)
+    try:
+        collaboration = get_collaboration(uri)
+    except:
+        collaboration = ""
+    try:
+        oscar_winners = get_oscar_winners(uri)
+    except:
+        oscar_winners = ""
 
     return render_template('person.html', oscar_winners=oscar_winners, collaboration=collaboration, img=url_img, list=personData)
 
@@ -288,6 +309,9 @@ def get_image(uri):
     :return: img_url: URL of movie poster
     """
     wiki_url = "https://en.wikipedia.org/wiki/" + uri.split("#")[1]
+    title_film = uri.split("#")[1]
+    if title_film in IMG_URLS.keys():
+        return IMG_URLS[title_film]
     img_url = ""
     ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -298,9 +322,8 @@ def get_image(uri):
         infobox = soup.find("table", class_="infobox")
         img_url = "http:" + infobox.find("img")['src']
     except (AttributeError, TypeError, UnicodeEncodeError) as e:
-        img_url = "https://upload.wikimedia.org/wikipedia/en/e/ee/Unknown-person.gif"
-        return img_url
-
+        img_url = ".\static\img\default_film.jpg"
+    IMG_URLS[title_film] = img_url
     return img_url
 
 

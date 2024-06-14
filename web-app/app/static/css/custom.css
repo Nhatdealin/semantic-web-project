@@ -158,3 +158,20 @@ button {
 .navbar .search-container .search-form  button:hover {
   background: #ccc;
 }
+
+img {
+  height:250px;
+  width: auto;/*maintain aspect ratio*/
+  max-width:400px;
+}
+.search_img {
+  height:150px;
+  width: auto;/*maintain aspect ratio*/
+  max-width:150px;
+}
+p.shrinkable {
+  height:200px;
+}
+.col-md-4 {
+  margin-bottom: auto;
+}
