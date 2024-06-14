@@ -8,9 +8,9 @@
         {% for item in list %}
             <div class="col-md-4">
                 <img src="{{item['img']}}">
-                <h2 style="border-bottom:thick rgb(0, 20, 0) double;">{{ item['title']['value'] }}</h2>
+                <h2 ><a href="/film/{{item['movie']['value']}}">{{ item['title']['value'] }}</a></h2>
                 <p class="shrinkable">{{ item['abstract']['value'] }}</p>
-                <a class="btn btn-default" href="/film/{{item['movie']['value']}}" role="button">View details »</a>
+                <!-- <a class="btn btn-default" href="/film/{{item['movie']['value']}}" role="button">View details »</a> -->
                 <h2 style="border-bottom:thick rgb(0, 20, 0) double;"></h2>
             </div>
         {% endfor %}

@@ -96,6 +96,7 @@ def search():
 def get_film(uri='none'):
     org_uri = uri
     uri = MOVIE + uri.replace(" ", "_")
+    print("AAAAAAAAAAA", uri)
     sparql.setQuery( PREFIX +
                      "SELECT ?predicate ?o WHERE { " +
                      "<" + uri +"> ?p ?o . " +
@@ -156,8 +157,19 @@ def get_film(uri='none'):
             movieData['duration'].append(result['o']['value'])
 
     img_url = get_image(uri)
-
-    return render_template('film.html', img=img_url, list=movieData, uri=org_uri)
+    sparql.setQuery(PREFIX + f"""
+        SELECT ?movie ?title WHERE {{ ?movie  wolff:hasGenre ?genre .
+  							?movie wolff:title ?title .
+  					<{uri}> wolff:hasGenre ?genre .
+  					filter ( ?movie != <{uri}> )
+        }} LIMIT 6
+        """)
+    sparql.setReturnFormat(JSON)
+    related_movies = sparql.query().convert()
+    for i, movie in enumerate(related_movies['results']['bindings']):
+            related_movies['results']['bindings'][i]['img'] = get_image(movie['movie']['value'])
+            related_movies['results']['bindings'][i]['movie']['value'] = movie['movie']['value'].split('#')[1]
+    return render_template('film.html', img=img_url, list=movieData, uri=org_uri, list_related_movies = related_movies['results']['bindings'])
 
 @app.route('/film/<org_uri>/edit', methods=['POST'])
 def set_film(org_uri='none'):
@@ -322,7 +334,7 @@ def get_image(uri):
         infobox = soup.find("table", class_="infobox")
         img_url = "http:" + infobox.find("img")['src']
     except (AttributeError, TypeError, UnicodeEncodeError) as e:
-        img_url = ".\static\img\default_film.jpg"
+        img_url = "/static/img/default_film.jpg"
     IMG_URLS[title_film] = img_url
     return img_url
 
